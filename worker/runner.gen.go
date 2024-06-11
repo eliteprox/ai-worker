@@ -58,6 +58,13 @@ type BodyImageToVideoImageToVideoPost struct {
 	Width            *int               `json:"width,omitempty"`
 }
 
+// BodySpeechToTextSpeechToTextPost defines model for Body_speech_to_text_speech_to_text_post.
+type BodySpeechToTextSpeechToTextPost struct {
+	Audio   openapi_types.File `json:"audio"`
+	ModelId *string            `json:"model_id,omitempty"`
+	Seed    *int               `json:"seed,omitempty"`
+}
+
 // BodyUpscaleUpscalePost defines model for Body_upscale_upscale_post.
 type BodyUpscaleUpscalePost struct {
 	Image       openapi_types.File `json:"image"`
@@ -92,6 +99,12 @@ type Media struct {
 	Nsfw bool   `json:"nsfw"`
 	Seed int    `json:"seed"`
 	Url  string `json:"url"`
+}
+
+// TextResponse defines model for TextResponse.
+type TextResponse struct {
+	Chunks []Chunk `json:"chunks"`
+	Text   string  `json:"text"`
 }
 
 // TextToImageParams defines model for TextToImageParams.
@@ -131,11 +144,20 @@ type VideoResponse struct {
 	Frames [][]Media `json:"frames"`
 }
 
+// Chunk defines model for chunk.
+type Chunk struct {
+	Text      string        `json:"text"`
+	Timestamp []interface{} `json:"timestamp"`
+}
+
 // ImageToImageMultipartRequestBody defines body for ImageToImage for multipart/form-data ContentType.
 type ImageToImageMultipartRequestBody = BodyImageToImageImageToImagePost
 
 // ImageToVideoMultipartRequestBody defines body for ImageToVideo for multipart/form-data ContentType.
 type ImageToVideoMultipartRequestBody = BodyImageToVideoImageToVideoPost
+
+// SpeechToTextMultipartRequestBody defines body for SpeechToText for multipart/form-data ContentType.
+type SpeechToTextMultipartRequestBody = BodySpeechToTextSpeechToTextPost
 
 // TextToImageJSONRequestBody defines body for TextToImage for application/json ContentType.
 type TextToImageJSONRequestBody = TextToImageParams
@@ -287,6 +309,9 @@ type ClientInterface interface {
 	// ImageToVideoWithBody request with any body
 	ImageToVideoWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// SpeechToTextWithBody request with any body
+	SpeechToTextWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// TextToImageWithBody request with any body
 	TextToImageWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -322,6 +347,18 @@ func (c *Client) ImageToImageWithBody(ctx context.Context, contentType string, b
 
 func (c *Client) ImageToVideoWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewImageToVideoRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SpeechToTextWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSpeechToTextRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -434,6 +471,35 @@ func NewImageToVideoRequestWithBody(server string, contentType string, body io.R
 	}
 
 	operationPath := fmt.Sprintf("/image-to-video")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewSpeechToTextRequestWithBody generates requests for SpeechToText with any type of body
+func NewSpeechToTextRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/speech-to-text")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -574,6 +640,9 @@ type ClientWithResponsesInterface interface {
 	// ImageToVideoWithBodyWithResponse request with any body
 	ImageToVideoWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImageToVideoResponse, error)
 
+	// SpeechToTextWithBodyWithResponse request with any body
+	SpeechToTextWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SpeechToTextResponse, error)
+
 	// TextToImageWithBodyWithResponse request with any body
 	TextToImageWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*TextToImageResponse, error)
 
@@ -655,6 +724,31 @@ func (r ImageToVideoResponse) StatusCode() int {
 	return 0
 }
 
+type SpeechToTextResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *TextResponse
+	JSON400      *HTTPError
+	JSON422      *HTTPValidationError
+	JSON500      *HTTPError
+}
+
+// Status returns HTTPResponse.Status
+func (r SpeechToTextResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SpeechToTextResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type TextToImageResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -730,6 +824,15 @@ func (c *ClientWithResponses) ImageToVideoWithBodyWithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParseImageToVideoResponse(rsp)
+}
+
+// SpeechToTextWithBodyWithResponse request with arbitrary body returning *SpeechToTextResponse
+func (c *ClientWithResponses) SpeechToTextWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SpeechToTextResponse, error) {
+	rsp, err := c.SpeechToTextWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSpeechToTextResponse(rsp)
 }
 
 // TextToImageWithBodyWithResponse request with arbitrary body returning *TextToImageResponse
@@ -878,6 +981,53 @@ func ParseImageToVideoResponse(rsp *http.Response) (*ImageToVideoResponse, error
 	return response, nil
 }
 
+// ParseSpeechToTextResponse parses an HTTP response from a SpeechToTextWithResponse call
+func ParseSpeechToTextResponse(rsp *http.Response) (*SpeechToTextResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SpeechToTextResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TextResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HTTPError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HTTPError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseTextToImageResponse parses an HTTP response from a TextToImageWithResponse call
 func ParseTextToImageResponse(rsp *http.Response) (*TextToImageResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -983,6 +1133,9 @@ type ServerInterface interface {
 	// Image To Video
 	// (POST /image-to-video)
 	ImageToVideo(w http.ResponseWriter, r *http.Request)
+	// Speech To Text
+	// (POST /speech-to-text)
+	SpeechToText(w http.ResponseWriter, r *http.Request)
 	// Text To Image
 	// (POST /text-to-image)
 	TextToImage(w http.ResponseWriter, r *http.Request)
@@ -1010,6 +1163,12 @@ func (_ Unimplemented) ImageToImage(w http.ResponseWriter, r *http.Request) {
 // Image To Video
 // (POST /image-to-video)
 func (_ Unimplemented) ImageToVideo(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Speech To Text
+// (POST /speech-to-text)
+func (_ Unimplemented) SpeechToText(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -1074,6 +1233,23 @@ func (siw *ServerInterfaceWrapper) ImageToVideo(w http.ResponseWriter, r *http.R
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ImageToVideo(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// SpeechToText operation middleware
+func (siw *ServerInterfaceWrapper) SpeechToText(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, HTTPBearerScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SpeechToText(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1240,6 +1416,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/image-to-video", wrapper.ImageToVideo)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/speech-to-text", wrapper.SpeechToText)
+	})
+	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/text-to-image", wrapper.TextToImage)
 	})
 	r.Group(func(r chi.Router) {
@@ -1252,26 +1431,31 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+xX3W/bNhD/VwRuj07seM0y+C3ZutbYsgax1z0EgcFIZ5mtRHLkKY0R+H8feLQl6sOT",
-	"M6QZUORJEnUfv/s+PrJY5VpJkGjZ5JHZeAU5p9fzq+lbY5Rx79ooDQYF0J/cpu6BAjNgE3ZpUzZguNbu",
-	"w6IRMmWbzYAZ+LsQBhI2uSGW20HJUsou+dTdJ4iRbQbsQiXrhch5CgtU25fGp1YW27DSQiRcxrCwMXda",
-	"HlkCS15kyCZnx6eV8ndbumhGdCUEWeR3YBwE0uIELJXJObIJuxOSmzWrhEyJpGX2gOUqgWwhkpp+FnBe",
-	"OoJomnQxS0g5intYaKNyjXtl/LGli648XZeoIvfesgsNpkvgSSCvyCOyyEZXYFpShURIvWsqOTve/RAs",
-	"QBJSztx3l1CLBmSKqxq80fFPFcDZjqIVrUai6R0aH8Mg5w7Nq96UvBcJqOZnd0outa3Z9GMF51dtO32x",
-	"ApGu6oE6PQv43vv/Xaz/W9rmCoWSi7si/gzYFHIyPgulOMrogihr0gI7pBIWFrxIF3sSYzQOUtcRR+dF",
-	"Gu3PkSek4heRNNSdjMZvKnV/0f82ZyMNe7Jvfwp1ZN/7+fxqTydOALnI3Nv3BpZswr4bVv18uG3mw7Lb",
-	"NlFu2QOYla49QD7yTCTcBbEXkkDIbR+2prxNheUXL6kEwo3ha7IhRNsU0IUbeIarn1cQf27jtcixqFcp",
-	"+/AbC1sPEXRNuKomKwUd+qnorsFqJS20EfgufbDHLiERPPSTb9xdfmplpA1jXYfVgdtranvs0FoqTBbS",
-	"/Wmy3j2hIBrSECD1QDoQzuEB54oMueKGe+d9ra2g6swH9OLXNeDpa0DZe5/YbLdggoRp50VH8vS2skzF",
-	"tarkcv1hySY3jy0bH1sQb4MC/V3FpKZVooPWKg3W7hnQ/qAiJczR3J32FZWzw6vaUgaeOqB9fnTTaX/7",
-	"WhqeN9rXE/tYwyflhuQF9/S1rfrQpBrelkGUkXFhBK5nDorH7kbJBXADprwGOaY7f1QKWSFqtnEyhFwq",
-	"X0c2NkJTfCfsXEZc60z4gEeoIlPI6HwaaaEhE9Lbs8sLcQ8awLj/14WUpOgejPWyRscnxyPnEKVBci3Y",
-	"hP1ARwOmOa4I9nBFo4caHVA9utCQ8mlSTibmXOb9QVzj0cg9YiURJHEFoIefrFO/uwv2hTGcfeSYukNm",
-	"RRyDtcsii8qQUAiKPHeraQnRHQ6pUx2hOipX2d1eXTeLKntb4MznA1h0O1bDrrzIUGhucOh24qOEIz/c",
-	"tENvDJt6TqIpYPMVPV6f24f6fMDePGfUyz2xQ/8FT6JrHxLSOx4/q97WythGUJFE5Vp5+lLmTyWCkTyL",
-	"ZmDuwUTV7r3rOzRDwo5zc7u5DWuCQhzNlZ/Gjdqg20JvbVAXfKna2H+feeHaqPf+19r4lmvDZzjVBsID",
-	"HjA2grXwXyvjvxvfXjxfh8NrATxvAbgcC2cD8Tphlljr+t4+8FxnEL3jCF/4mm1v5bTITobD1B8fgUy0",
-	"EhKPuRi6y8s/AQAA///zRBgJGBgAAA==",
+	"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",
+	"+38CAAD//4PFS/VlJAAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
