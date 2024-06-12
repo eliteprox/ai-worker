@@ -33,9 +33,10 @@ const containerCreator = "ai-worker"
 // using the GPU we stop it so we don't have to worry about having enough ports
 var containerHostPorts = map[string]string{
 	"text-to-image":  "8000",
-	"image-to-image": "8100",
-	"image-to-video": "8200",
-	"upscale":        "8300",
+	"image-to-image": "8001",
+	"image-to-video": "8002",
+	"upscale":        "8003",
+	"speech-to-text": "8004",
 }
 
 type DockerManager struct {
