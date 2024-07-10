@@ -47,6 +47,11 @@ async def image_to_image(
         str,
         Form(description="Hugging Face model ID used for image generation."),
     ] = "",
+    loras: Annotated[
+        str, 
+        Form(
+            description="A lora and weight to use for image generation."),
+    ] = "",
     strength: Annotated[
         float,
         Form(
@@ -141,6 +146,7 @@ async def image_to_image(
                 prompt=prompt,
                 image=image,
                 strength=strength,
+                loras=loras,
                 guidance_scale=guidance_scale,
                 image_guidance_scale=image_guidance_scale,
                 negative_prompt=negative_prompt,
