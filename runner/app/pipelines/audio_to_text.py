@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 MODEL_INCOMPATIBLE_EXTENSIONS = {
     "openai/whisper-large-v3": ["mp4", "m4a", "ac3"],
+    "openai/whisper-medium": ["mp4", "m4a", "ac3"],
+    "distil-whisper/distil-large-v3": ["mp4", "m4a", "ac3"]
 }
 
 
@@ -39,6 +41,10 @@ class AudioToTextPipeline(Pipeline):
 
             kwargs["torch_dtype"] = torch.float16
             kwargs["variant"] = "fp16"
+
+        if os.environ.get("FLOAT16"):
+            logger.info("AudioToTextPipeline using float16 precision for %s", model_id)
+            kwargs["torch_dtype"] = torch.float16
 
         if os.environ.get("BFLOAT16"):
             logger.info("AudioToTextPipeline using bfloat16 precision for %s", model_id)
@@ -75,7 +81,7 @@ class AudioToTextPipeline(Pipeline):
             audio_converter = AudioConverter()
             converted_bytes = audio_converter.convert(audio, "mp3")
             audio_converter.write_bytes_to_file(converted_bytes, audio)
-
+        
         return self.ldm(audio.file.read(), **kwargs)
 
     def __str__(self) -> str:
