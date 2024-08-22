@@ -464,8 +464,7 @@
                     "loras": {
                         "type": "string",
                         "title": "Loras",
-                        "description": "A lora and weight to use for image generation.",
-                        "default": ""
+                        "description": "A lora and weight to use for image generation."
                     },
                     "strength": {
                         "type": "number",
@@ -798,7 +797,6 @@
                 },
                 "type": "object",
                 "required": [
-                    "loras",
                     "prompt"
                 ],
                 "title": "TextToImageParams"

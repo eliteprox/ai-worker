@@ -51,7 +51,7 @@ async def image_to_image(
         str, 
         Form(
             description="A lora and weight to use for image generation."),
-    ] = "",
+    ] = None,
     strength: Annotated[
         float,
         Form(
