@@ -37,7 +37,7 @@ RESPONSES = {
     include_in_schema=False,
 )
 async def SegmentAnything2(
-    image: Annotated[UploadFile, File()],
+    media_file: Annotated[UploadFile, File()],
     model_id: Annotated[str, Form()] = "",
     point_coords: Annotated[str, Form()] = None,
     point_labels: Annotated[str, Form()] = None,
@@ -78,18 +78,53 @@ async def SegmentAnything2(
             content=http_error(str(e)),
         )
 
+    supported_video_types = ["video/mp4"]
+    supported_image_types = ["image/jpeg", "image/png", "image/jpg"]
+
     try:
-        image = Image.open(image.file)
-        masks, scores, low_res_mask_logits = pipeline(
-            image,
-            point_coords=point_coords,
-            point_labels=point_labels,
-            box=box,
-            mask_input=mask_input,
-            multimask_output=multimask_output,
-            return_logits=return_logits,
-            normalize_coords=normalize_coords,
-        )
+        if media_file.content_type in supported_image_types:
+            masks, scores, low_res_mask_logits = pipeline(
+                media_file,
+                media_type="image",
+                point_coords=point_coords,
+                point_labels=point_labels,
+                box=box,
+                mask_input=mask_input,
+                multimask_output=multimask_output,
+                return_logits=return_logits,
+                normalize_coords=normalize_coords,
+            )
+
+            # Return masks sorted by descending score as JSON.
+            sorted_ind = np.argsort(scores)[::-1]
+            return {
+                "masks":  str(masks[sorted_ind].tolist()),
+                "scores":  str(scores[sorted_ind].tolist()),
+                "logits":  str(low_res_mask_logits[sorted_ind].tolist()),
+            }
+        elif media_file.content_type in supported_video_types:
+            out_masks = pipeline(
+                media_file,
+                media_type="video",
+                point_coords=point_coords,
+                point_labels=point_labels,
+                box=box,
+                mask_input=mask_input,
+                multimask_output=None,
+                return_logits=None,
+                normalize_coords=None,
+            )
+            
+            # Return masks sorted by descending score as JSON.
+            # TODO fix return output to something useful
+            return {
+                "masks":  str(out_masks),
+                "scores":  str(""),
+                "logits":  str(""),
+            }
+        else:
+            raise InferenceError(f"Unsupported media type: {media_file.content_type}")
+
     except Exception as e:
         logger.error(f"Segment Anything 2 error: {e}")
         logger.exception(e)
@@ -104,10 +139,3 @@ async def SegmentAnything2(
             content=http_error("Segment Anything 2 error"),
         )
 
-    # Return masks sorted by descending score as JSON.
-    sorted_ind = np.argsort(scores)[::-1]
-    return {
-        "masks":  str(masks[sorted_ind].tolist()),
-        "scores":  str(scores[sorted_ind].tolist()),
-        "logits":  str(low_res_mask_logits[sorted_ind].tolist()),
-    }
