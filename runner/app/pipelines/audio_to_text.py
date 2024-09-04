@@ -88,9 +88,6 @@ class AudioToTextPipeline(Pipeline):
             kwargs["attn_implementation"]="sdpa"
 
         # kwargs["use_cuda"] = torch_device != "cpu"
-        
-        model_id = str(get_model_path("models--"+model_id.replace("/", "--")))
-
         model = AutoModelForSpeechSeq2Seq.from_pretrained(
             model_id,
             low_cpu_mem_usage=True,
