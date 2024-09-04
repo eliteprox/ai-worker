@@ -11,7 +11,6 @@ from fastapi import File, UploadFile
 from huggingface_hub import file_download
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 
-from app.pipelines.utils.utils import get_model_path
 
 logger = logging.getLogger(__name__)
 
@@ -91,10 +90,6 @@ class AudioToTextPipeline(Pipeline):
         kwargs["batch_size"] = 16
 
         processor = AutoProcessor.from_pretrained(model_id, cache_dir=get_model_dir())
-
-        if ModelName.WHISPER_DISTIL_LARGE_V3 and os.environ.get("FLASH_ATTN"):
-            model.config.attn_implementation = "flash_attention_2"
-            logger.info("AudioToText loading %s flash_attention_2 for %s", model_id)
 
         self.ldm = pipeline(
             "automatic-speech-recognition",
