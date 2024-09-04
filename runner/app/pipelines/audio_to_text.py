@@ -106,7 +106,7 @@ class AudioToTextPipeline(Pipeline):
             max_new_tokens=128,
             chunk_length_s=30,
             batch_size=16,
-            return_timestamps=kwargs.get("return_timestamps", True),
+            return_timestamps=True,
             **kwargs,
         )
 
