@@ -10,12 +10,10 @@ from app.pipelines.utils.audio import AudioConverter
 from fastapi import File, UploadFile
 from huggingface_hub import file_download
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
-from transformers.utils import is_torch_sdpa_available
 
 from app.pipelines.utils.utils import get_model_path
 
 logger = logging.getLogger(__name__)
-
 
 MODEL_INCOMPATIBLE_EXTENSIONS = {
     "openai/whisper-large-v3": ["mp4", "m4a", "ac3"],
@@ -46,19 +44,20 @@ class AudioToTextPipeline(Pipeline):
         )
         folder_path = os.path.join(get_model_dir(), folder_name)
 
-
         MODEL_OPT_DEFAULTS = {
             ModelName.WHISPER_LARGE_V3: {
                 "torch_dtype": torch.float16 if torch.cuda.is_available() else torch.float32,
-                # "bach_size": "",
+                "chunk_length_s": 30
             },
             ModelName.WHISPER_MEDIUM: 
             {
                 "torch_dtype": torch.float32,
+                "chunk_length_s": 30
             },
             ModelName.WHISPER_DISTIL_LARGE_V3:
             {
                 "torch_dtype": torch.float16 if torch.cuda.is_available() else torch.float32,
+                "chunk_length_s": 25
             }
         }
         
@@ -68,24 +67,15 @@ class AudioToTextPipeline(Pipeline):
         model_type = ModelName[model_name_enum]
 
         # Retrieve torch_dtype from MODEL_OPT_DEFAULTS
-        #torch_dtype = MODEL_OPT_DEFAULTS[model_name_enum].get("torch_dtype", torch.float16)   
-
         kwargs["torch_dtype"] = MODEL_OPT_DEFAULTS[model_type].get("torch_dtype", torch.float16)
-        # kwargs["torch_dtype"] = MODEL_OPT_DEFAULTS[ModelName.list[model_id]].get("torch_dtype", torch.float16)
 
         if torch_device != "cpu" and kwargs["torch_dtype"] == torch.float16:
             logger.info("AudioToText loading %s variant for fp16", model_id)
             
         elif torch_device != "cpu" and kwargs["torch_dtype"] == torch.float32:
-            kwargs["variant"] = "fp32"
-            logger.info("AudioToText loading %s variant for %s", kwargs["variant"], model_id)
+            logger.info("AudioToText loading %s variant for f32", model_id)
 
-        # if bfloat16_enabled:
-        #     logger.info("AudioToTextPipeline using bfloat16 precision for %s", model_id)
-        #     kwargs["torch_dtype"] = torch.bfloat16
-
-        if is_torch_sdpa_available() and ModelName.WHISPER_DISTIL_LARGE_V3 == model_type:
-            kwargs["attn_implementation"]="sdpa"
+       # if is_torch_sdpa_available() and ModelName.WHISPER_DISTIL_LARGE_V3 == mod el_type:
 
         # kwargs["use_cuda"] = torch_device != "cpu"
         model = AutoModelForSpeechSeq2Seq.from_pretrained(
@@ -96,7 +86,15 @@ class AudioToTextPipeline(Pipeline):
             **kwargs,
         ).to(torch_device)
 
+        # TODO: If audio duration is greater than 30 seconds, split the audio into chunks of 30 seconds.
+        kwargs["chunk_length_s"] = MODEL_OPT_DEFAULTS[model_type].get("chunk_length_s", 30)
+        kwargs["batch_size"] = 16
+
         processor = AutoProcessor.from_pretrained(model_id, cache_dir=get_model_dir())
+
+        if ModelName.WHISPER_DISTIL_LARGE_V3 and os.environ.get("FLASH_ATTN"):
+            model.config.attn_implementation = "flash_attention_2"
+            logger.info("AudioToText loading %s flash_attention_2 for %s", model_id)
 
         self.ldm = pipeline(
             "automatic-speech-recognition",
@@ -104,11 +102,15 @@ class AudioToTextPipeline(Pipeline):
             tokenizer=processor.tokenizer,
             feature_extractor=processor.feature_extractor,
             max_new_tokens=128,
-            chunk_length_s=30,
-            batch_size=16,
             return_timestamps=True,
             **kwargs,
         )
+
+        # TODO: Chunk if audio duration is greater than 30 seconds
+        # self.ldm.config.chunk_length_s = chunk_length_s
+
+        # TODO: Set up the logits processor
+ #       model.config.logits_processor = logits_processor
 
     def __call__(self, audio: UploadFile, **kwargs) -> List[File]:
         # Convert M4A/MP4 files for pipeline compatibility.
