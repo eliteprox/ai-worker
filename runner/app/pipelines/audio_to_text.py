@@ -11,7 +11,6 @@ from fastapi import File, UploadFile
 from huggingface_hub import file_download
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 
-
 logger = logging.getLogger(__name__)
 
 MODEL_INCOMPATIBLE_EXTENSIONS = {
@@ -61,7 +60,6 @@ class AudioToTextPipeline(Pipeline):
         }
         
         # Map model_id to ModelName enum
-        
         model_name_enum = next(key for key, value in ModelName.__members__.items() if value.value == model_id)
         model_type = ModelName[model_name_enum]
 
@@ -74,9 +72,6 @@ class AudioToTextPipeline(Pipeline):
         elif torch_device != "cpu" and kwargs["torch_dtype"] == torch.float32:
             logger.info("AudioToText loading %s variant for f32", model_id)
 
-       # if is_torch_sdpa_available() and ModelName.WHISPER_DISTIL_LARGE_V3 == mod el_type:
-
-        # kwargs["use_cuda"] = torch_device != "cpu"
         model = AutoModelForSpeechSeq2Seq.from_pretrained(
             model_id,
             low_cpu_mem_usage=True,
@@ -100,12 +95,6 @@ class AudioToTextPipeline(Pipeline):
             return_timestamps=True,
             **kwargs,
         )
-
-        # TODO: Chunk if audio duration is greater than 30 seconds
-        # self.ldm.config.chunk_length_s = chunk_length_s
-
-        # TODO: Set up the logits processor
- #       model.config.logits_processor = logits_processor
 
     def __call__(self, audio: UploadFile, **kwargs) -> List[File]:
         # Convert M4A/MP4 files for pipeline compatibility.
