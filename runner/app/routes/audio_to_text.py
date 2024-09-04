@@ -62,6 +62,9 @@ async def audio_to_text(
         str,
         Form(description="Hugging Face model ID used for transcription."),
     ] = "",
+    return_timestamps: Annotated[
+        bool, Form(description="Return timestamps for each word in the transcription.")
+    ] = True,
     pipeline: Pipeline = Depends(get_pipeline),
     token: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
 ):
@@ -90,6 +93,6 @@ async def audio_to_text(
         )
 
     try:
-        return pipeline(audio=audio)
+        return pipeline(model_id, audio, return_timestamps=return_timestamps)
     except Exception as e:
         return handle_pipeline_error(e)

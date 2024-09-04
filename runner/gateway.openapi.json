@@ -416,6 +416,12 @@
                         "title": "Model Id",
                         "description": "Hugging Face model ID used for transcription.",
                         "default": ""
+                    },
+                    "return_timestamps": {
+                        "type": "boolean",
+                        "title": "Return Timestamps",
+                        "description": "Return timestamps for each word in the transcription.",
+                        "default": true
                     }
                 },
                 "type": "object",
