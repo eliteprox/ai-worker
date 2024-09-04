@@ -33,6 +33,8 @@ function download_alpha_models() {
 
     # Download audio-to-text models.
     huggingface-cli download openai/whisper-large-v3 --include "*.safetensors" "*.json" --cache-dir models
+    huggingface-cli download distil-whisper/distil-large-v3 --include "*.safetensors" "*.json" --cache-dir models
+    huggingface-cli download openai/whisper-medium --include "*.safetensors" "*.json" --cache-dir models
 
     printf "\nDownloading token-gated models...\n"
 
