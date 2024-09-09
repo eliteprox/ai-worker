@@ -13,12 +13,6 @@ from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 
 logger = logging.getLogger(__name__)
 
-MODEL_INCOMPATIBLE_EXTENSIONS = {
-    "openai/whisper-large-v3": ["mp4", "m4a", "ac3"],
-    "openai/whisper-medium": ["mp4", "m4a", "ac3"],
-    "distil-whisper/distil-large-v3": ["mp4", "m4a", "ac3"]
-}
-
 class ModelName(Enum):
     """Enumeration mapping model names to their corresponding IDs."""
 
@@ -30,6 +24,18 @@ class ModelName(Enum):
     def list(cls):
         """Return a list of all model IDs."""
         return list(map(lambda c: c.value, cls))
+    
+# MODEL_INCOMPATIBLE_EXTENSIONS = {
+#     ModelName.WHISPER_LARGE_V3: ["mp4", "m4a", "ac3"],
+#     ModelName.WHISPER_MEDIUM: ["mp4", "m4a", "ac3"],
+#     ModelName.WHISPER_DISTIL_LARGE_V3: ["mp4", "m4a", "ac3"]
+#}
+
+MODEL_INCOMPATIBLE_EXTENSIONS = {
+    "openai/whisper-large-v3": ["mp4", "m4a", "ac3"],
+    "openai/whisper-medium": ["mp4", "m4a", "ac3"],
+    "distil-whisper/distil-large-v3": ["mp4", "m4a", "ac3"]
+}
 
 class AudioToTextPipeline(Pipeline):
     def __init__(self, model_id: str):
