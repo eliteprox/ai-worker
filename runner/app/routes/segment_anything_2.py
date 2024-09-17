@@ -3,12 +3,14 @@ import os
 from typing import Annotated
 
 import numpy as np
+from pydantic import ValidationError
 from app.dependencies import get_pipeline
 from app.pipelines.base import Pipeline
 from app.routes.util import (
     HTTPError,
     InferenceError,
     MasksResponse,
+    VideoSegmentResponse,
     http_error,
     json_str_to_np_array,
 )
@@ -16,6 +18,7 @@ from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from PIL import Image, ImageFile
+from typing import List
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -116,7 +119,7 @@ async def segment_anything_2(
     frame_idx : Annotated[
         int, 
         Form(description="Frame index reference for (required video file input only)")
-    ] = -1,
+    ] = 0,
     pipeline: Pipeline = Depends(get_pipeline),
     token: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
 ):
@@ -187,7 +190,7 @@ async def segment_anything_2(
                 #             labels=point_labels,
                 #         )
 
-                video_segments = []
+                video_segments = {}
 
                 for out_frame_idx, out_obj_ids, out_mask_logits in pipeline(
                     media_file,
@@ -198,21 +201,47 @@ async def segment_anything_2(
                 ):
                     # Collect the data for each frame
                     segment_data = {
-                        "frame_idx": out_frame_idx, #type int
-                        "obj_ids": out_obj_ids, #type list
+                        "frame_idx":out_frame_idx, #type int
+                        "obj_ids":out_obj_ids, #type list
                         "mask_logits": [mask.cpu().numpy().tolist() for mask in out_mask_logits]
                     }
-                    video_segments.append(segment_data)
+                    if out_frame_idx not in video_segments:
+                        video_segments[out_frame_idx] = {"obj_ids": [], "mask_logits": []}
+                    
+                    video_segments[out_frame_idx]["obj_ids"].extend(out_obj_ids)
+                    video_segments[out_frame_idx]["mask_logits"].extend(
+                        [mask.cpu().numpy().tolist() for mask in out_mask_logits]
+                    )
 
-                # Return the collected video segments as JSON
-                # return JSONResponse(content={"video_segments": video_segments})
-                print(f"***************************updated123******")
-                return {
-                    "masks": "",
-                    "scores": "",
-                    "logits": "",
-                    "video_segments": video_segments,
-                }
+                video_segment_responses = []
+
+                for frame_idx, segments in video_segments.items():
+                    obj_ids = segments["obj_ids"]
+                    mask_logits = segments["mask_logits"]
+                    try:
+                        # Create a dictionary to map obj_id to its corresponding mask_logits
+                        mask_logits_dict = {obj_id: mask_logits[i] for i, obj_id in enumerate(obj_ids)}
+                        mask_logits_list = [mask_logits_dict[obj_id] for obj_id in obj_ids]
+
+                        segment_data = VideoSegmentResponse(
+                            frame_idx=frame_idx,
+                            obj_ids=obj_ids,
+                            mask_logits=mask_logits_list
+                        )
+                        video_segment_responses.append(segment_data)
+                    except ValidationError as e:
+                        print(f"Validation error for frame {frame_idx}: {e}")
+
+                # Print video_segment_responses to inspect its structure
+                # print("video_segment_responses:", video_segment_responses)
+
+                return MasksResponse(
+                    masks="",
+                    scores="",
+                    logits="",
+                    video_segments=video_segment_responses
+                )
+    
         # else:
         #     raise InferenceError(f"Unsupported media type: {media_file.content_type}")
 

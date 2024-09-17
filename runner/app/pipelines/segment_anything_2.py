@@ -92,7 +92,7 @@ class SegmentAnything2Pipeline(Pipeline):
                 frame_files = sorted(
                     [f for f in os.listdir(frame_dir) if f.endswith('.jpg')]
                 )
-                for frame_file in frame_files[:-500]:
+                for frame_file in frame_files[:-3]:
                     os.remove(os.path.join(frame_dir, frame_file))
                 
                 inference_state = self.tm_vid.init_state(video_path=frame_dir)
@@ -107,6 +107,7 @@ class SegmentAnything2Pipeline(Pipeline):
                     )
                 
                 return self.tm_vid.propagate_in_video(inference_state)
+            
             except Exception as e:
                 raise InferenceError(original_exception=e)
 

@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Livepeer AI Runner
   description: An application to run AI pipelines
-  version: v0.2.0
+  version: v0.5.0
 servers:
 - url: https://dream-gateway.livepeer.cloud
   description: Livepeer Cloud Community Gateway
@@ -498,7 +498,7 @@ components:
           type: integer
           title: Frame Idx
           description: Frame index reference for (required video file input only)
-          default: -1
+          default: 0
       type: object
       required:
       - media_file
@@ -758,11 +758,15 @@ components:
         mask_logits:
           items:
             items:
-              type: number
+              items:
+                items:
+                  type: number
+                type: array
+              type: array
             type: array
           type: array
           title: Mask Logits
-          description: The generated masks.
+          description: List of objects and their generated masks for this frame
       type: object
       required:
       - frame_idx
