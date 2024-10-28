@@ -45,6 +45,12 @@ class AudioResponse(BaseModel):
 
     audio: MediaURL = Field(..., description="The generated audio.")
 
+class VideoSegmentationItem(BaseModel):
+    shape: tuple = Field(..., description="The shape of the mask.")
+    mask: bytes = Field(..., description="The mask data.")
+
+class VideoSegmentResponse(BaseModel):
+    VideoFrames: List[VideoSegmentationItem] = Field(..., description="List of base64-encoded, zlib compressed mask data of all video frames.") 
 
 class MasksResponse(BaseModel):
     """Response model for object segmentation."""
@@ -58,7 +64,7 @@ class MasksResponse(BaseModel):
     )
 
 
-class Chunk(BaseModel):
+class chunk(BaseModel):
     """A chunk of text with a timestamp."""
 
     timestamp: Tuple = Field(..., description="The timestamp of the chunk.")

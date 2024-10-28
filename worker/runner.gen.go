@@ -178,6 +178,39 @@ type BodyGenSegmentAnything2 struct {
 	ReturnLogits *bool `json:"return_logits,omitempty"`
 }
 
+// BodyGenSegmentAnything2Video defines model for Body_genSegmentAnything2Video.
+type BodyGenSegmentAnything2Video struct {
+	// Box A length 4 array given as a box prompt to the model, in XYXY format.
+	Box *string `json:"box,omitempty"`
+
+	// FrameIdx Frame index reference for (required video file input only)
+	FrameIdx *int `json:"frame_idx,omitempty"`
+
+	// MaskInput A low-resolution mask input to the model, typically from a previous prediction iteration, with the form 1xHxW (H=W=256 for SAM).
+	MaskInput *string `json:"mask_input,omitempty"`
+
+	// MediaFile Media file to segment.
+	MediaFile openapi_types.File `json:"media_file"`
+
+	// ModelId Hugging Face model ID used for image generation.
+	ModelId *string `json:"model_id,omitempty"`
+
+	// MultimaskOutput If true, the model will return three masks for ambiguous input prompts, often producing better masks than a single prediction.
+	MultimaskOutput *bool `json:"multimask_output,omitempty"`
+
+	// NormalizeCoords If true, the point coordinates will be normalized to the range [0,1], with point_coords expected to be with respect to image dimensions.
+	NormalizeCoords *bool `json:"normalize_coords,omitempty"`
+
+	// PointCoords Nx2 array of point prompts to the model, where each point is in (X,Y) in pixels.
+	PointCoords *string `json:"point_coords,omitempty"`
+
+	// PointLabels Labels for the point prompts, where 1 indicates a foreground point and 0 indicates a background point.
+	PointLabels *string `json:"point_labels,omitempty"`
+
+	// ReturnLogits If true, returns un-thresholded mask logits instead of a binary mask.
+	ReturnLogits *bool `json:"return_logits,omitempty"`
+}
+
 // BodyGenUpscale defines model for Body_genUpscale.
 type BodyGenUpscale struct {
 	// Image Uploaded image to modify with the pipeline.
@@ -377,6 +410,21 @@ type VideoResponse struct {
 	Frames [][]Media `json:"frames"`
 }
 
+// VideoSegmentResponse defines model for VideoSegmentResponse.
+type VideoSegmentResponse struct {
+	// VideoFrames List of base64-encoded, zlib compressed mask data of all video frames.
+	VideoFrames []VideoSegmentationItem `json:"VideoFrames"`
+}
+
+// VideoSegmentationItem defines model for VideoSegmentationItem.
+type VideoSegmentationItem struct {
+	// Mask The mask data.
+	Mask openapi_types.File `json:"mask"`
+
+	// Shape The shape of the mask.
+	Shape []interface{} `json:"shape"`
+}
+
 // GenAudioToTextMultipartRequestBody defines body for GenAudioToText for multipart/form-data ContentType.
 type GenAudioToTextMultipartRequestBody = BodyGenAudioToText
 
@@ -397,6 +445,9 @@ type GenLLMFormdataRequestBody = BodyGenLLM
 
 // GenSegmentAnything2MultipartRequestBody defines body for GenSegmentAnything2 for multipart/form-data ContentType.
 type GenSegmentAnything2MultipartRequestBody = BodyGenSegmentAnything2
+
+// GenSegmentAnything2VideoMultipartRequestBody defines body for GenSegmentAnything2Video for multipart/form-data ContentType.
+type GenSegmentAnything2VideoMultipartRequestBody = BodyGenSegmentAnything2Video
 
 // GenTextToImageJSONRequestBody defines body for GenTextToImage for application/json ContentType.
 type GenTextToImageJSONRequestBody = TextToImageParams
@@ -570,6 +621,9 @@ type ClientInterface interface {
 	// GenSegmentAnything2WithBody request with any body
 	GenSegmentAnything2WithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GenSegmentAnything2VideoWithBody request with any body
+	GenSegmentAnything2VideoWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GenTextToImageWithBody request with any body
 	GenTextToImageWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -694,6 +748,18 @@ func (c *Client) GenLLMWithFormdataBody(ctx context.Context, body GenLLMFormdata
 
 func (c *Client) GenSegmentAnything2WithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGenSegmentAnything2RequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GenSegmentAnything2VideoWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGenSegmentAnything2VideoRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1016,6 +1082,35 @@ func NewGenSegmentAnything2RequestWithBody(server string, contentType string, bo
 	return req, nil
 }
 
+// NewGenSegmentAnything2VideoRequestWithBody generates requests for GenSegmentAnything2Video with any type of body
+func NewGenSegmentAnything2VideoRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/segment-anything-2-video")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGenTextToImageRequest calls the generic GenTextToImage builder with application/json body
 func NewGenTextToImageRequest(server string, body GenTextToImageJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -1195,6 +1290,9 @@ type ClientWithResponsesInterface interface {
 
 	// GenSegmentAnything2WithBodyWithResponse request with any body
 	GenSegmentAnything2WithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GenSegmentAnything2Response, error)
+
+	// GenSegmentAnything2VideoWithBodyWithResponse request with any body
+	GenSegmentAnything2VideoWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GenSegmentAnything2VideoResponse, error)
 
 	// GenTextToImageWithBodyWithResponse request with any body
 	GenTextToImageWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GenTextToImageResponse, error)
@@ -1417,6 +1515,32 @@ func (r GenSegmentAnything2Response) StatusCode() int {
 	return 0
 }
 
+type GenSegmentAnything2VideoResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *VideoSegmentResponse
+	JSON400      *HTTPError
+	JSON401      *HTTPError
+	JSON422      *HTTPValidationError
+	JSON500      *HTTPError
+}
+
+// Status returns HTTPResponse.Status
+func (r GenSegmentAnything2VideoResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GenSegmentAnything2VideoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GenTextToImageResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -1581,6 +1705,15 @@ func (c *ClientWithResponses) GenSegmentAnything2WithBodyWithResponse(ctx contex
 		return nil, err
 	}
 	return ParseGenSegmentAnything2Response(rsp)
+}
+
+// GenSegmentAnything2VideoWithBodyWithResponse request with arbitrary body returning *GenSegmentAnything2VideoResponse
+func (c *ClientWithResponses) GenSegmentAnything2VideoWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GenSegmentAnything2VideoResponse, error) {
+	rsp, err := c.GenSegmentAnything2VideoWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGenSegmentAnything2VideoResponse(rsp)
 }
 
 // GenTextToImageWithBodyWithResponse request with arbitrary body returning *GenTextToImageResponse
@@ -2051,6 +2184,60 @@ func ParseGenSegmentAnything2Response(rsp *http.Response) (*GenSegmentAnything2R
 	return response, nil
 }
 
+// ParseGenSegmentAnything2VideoResponse parses an HTTP response from a GenSegmentAnything2VideoWithResponse call
+func ParseGenSegmentAnything2VideoResponse(rsp *http.Response) (*GenSegmentAnything2VideoResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GenSegmentAnything2VideoResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VideoSegmentResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest HTTPError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest HTTPError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest HTTPError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGenTextToImageResponse parses an HTTP response from a GenTextToImageWithResponse call
 func ParseGenTextToImageResponse(rsp *http.Response) (*GenTextToImageResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -2239,6 +2426,9 @@ type ServerInterface interface {
 	// Segment Anything 2
 	// (POST /segment-anything-2)
 	GenSegmentAnything2(w http.ResponseWriter, r *http.Request)
+	// Segment Anything 2 Video
+	// (POST /segment-anything-2-video)
+	GenSegmentAnything2Video(w http.ResponseWriter, r *http.Request)
 	// Text To Image
 	// (POST /text-to-image)
 	GenTextToImage(w http.ResponseWriter, r *http.Request)
@@ -2299,6 +2489,12 @@ func (_ Unimplemented) GenLLM(w http.ResponseWriter, r *http.Request) {
 // Segment Anything 2
 // (POST /segment-anything-2)
 func (_ Unimplemented) GenSegmentAnything2(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Segment Anything 2 Video
+// (POST /segment-anything-2-video)
+func (_ Unimplemented) GenSegmentAnything2Video(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2454,6 +2650,23 @@ func (siw *ServerInterfaceWrapper) GenSegmentAnything2(w http.ResponseWriter, r 
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GenSegmentAnything2(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// GenSegmentAnything2Video operation middleware
+func (siw *ServerInterfaceWrapper) GenSegmentAnything2Video(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, HTTPBearerScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GenSegmentAnything2Video(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -2650,6 +2863,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/segment-anything-2", wrapper.GenSegmentAnything2)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/segment-anything-2-video", wrapper.GenSegmentAnything2Video)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/text-to-image", wrapper.GenTextToImage)
