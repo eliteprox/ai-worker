@@ -4,13 +4,14 @@ import logging
 import multiprocessing as mp
 import queue
 import time
-
+from typing import Optional
 from PIL import Image
-
+from config import VENV_MAPPING
 from pipelines import load_pipeline
 
 
 class PipelineProcess:
+
     @staticmethod
     def start(pipeline_name: str, **params):
         instance = PipelineProcess(pipeline_name)
@@ -21,6 +22,7 @@ class PipelineProcess:
 
     def __init__(self, pipeline_name: str):
         self.pipeline_name = pipeline_name
+        self.venv_path = VENV_MAPPING.get(pipeline_name)
         self.ctx = mp.get_context("spawn")
 
         self.input_queue = self.ctx.Queue(maxsize=5)
@@ -84,6 +86,13 @@ class PipelineProcess:
             datefmt='%Y-%m-%d %H:%M:%S')
 
         try:
+            # Activate virtual environment if specified
+            if self.venv_path:
+                activate_script = f"{self.venv_path}/bin/activate"
+                if os.path.exists(activate_script):
+                    os.environ["VIRTUAL_ENV"] = self.venv_path
+                    os.environ["PATH"] = f"{self.venv_path}/bin:{os.environ['PATH']}"
+
             params = {}
             try:
                 params = self.param_update_queue.get_nowait()

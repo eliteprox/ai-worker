@@ -16,4 +16,7 @@ def load_pipeline(name: str, **params) -> Pipeline:
     elif name == "segment_anything_2":
         from .segment_anything_2 import Sam2Live
         return Sam2Live(**params)
+    elif name == "streamdiffusion_sam2":
+        from .streamdiffusion_sam2 import StreamDiffusionSam2
+        return StreamDiffusionSam2(**params)
     raise ValueError(f"Unknown pipeline: {name}")

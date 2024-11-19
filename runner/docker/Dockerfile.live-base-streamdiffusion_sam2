@@ -1,0 +1,61 @@
+# Dockerfile.live-base-streamdiffusion_sam2
+ARG BASE_IMAGE=livepeer/ai-runner:live-base
+FROM ${BASE_IMAGE}
+
+# Base environment setup
+ARG PYTHON_VERSION=3.10
+RUN pyenv install $PYTHON_VERSION && \
+    pyenv global $PYTHON_VERSION && \
+    pyenv rehash
+
+# Upgrade pip and install required packages
+ARG PIP_VERSION=23.3.2
+ENV PIP_PREFER_BINARY=1
+RUN pip install --no-cache-dir --upgrade pip==${PIP_VERSION} setuptools==69.5.1 wheel==0.43.0
+
+# Common system dependencies
+RUN apt-get update && apt-get install -y \
+    g++-11 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+ENV CXX=/usr/bin/g++-11
+
+#-----------------------------------
+# Create SAM2 virtual environment
+ENV SAM2_VENV=/opt/sam2_venv
+RUN python -m venv --system-site-packages $SAM2_VENV
+RUN $SAM2_VENV/bin/pip install --no-cache-dir \
+    torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0 xformers==0.0.27.post2
+
+RUN $SAM2_VENV/bin/pip install --no-cache-dir \
+    huggingface-hub==0.23.2 ninja
+
+ENV TORCH_CUDA_ARCH_LIST="6.0 7.0 7.5 8.0 8.6+PTX"
+
+RUN $SAM2_VENV/bin/pip install --no-cache-dir --no-build-isolation \
+    git+https://github.com/eliteprox/segment-anything-2-real-time@main
+
+
+# Create StreamDiffusion virtual environment  
+ENV SD_VENV=/opt/sd_venv
+RUN python -m venv --system-site-packages $SD_VENV
+RUN $SD_VENV/bin/pip install --no-cache-dir \
+    torch==2.1.0 \
+    torchvision==0.16.0 \
+    xformers \
+    --index-url https://download.pytorch.org/whl/cu121 
+    
+RUN $SD_VENV/bin/pip install --no-cache-dir \
+    huggingface-hub==0.23.2 \
+    diffusers==0.30.0 \
+    protobuf==5.27.2
+
+RUN $SD_VENV/bin/pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@765d710#egg=streamdiffusion[tensorrt]
+
+RUN $SD_VENV/bin/python -m streamdiffusion.tools.install-tensorrt
+
+WORKDIR /app
+RUN ln -s /models/StreamDiffusion--engines ./engines
+
+#TODO remove these later, they go in live-base
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility,video

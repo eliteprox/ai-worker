@@ -79,7 +79,41 @@ function download_all_models() {
 
     # Download live-video-to-video models.
     huggingface-cli download KBlueLeaf/kohaku-v2.1 --include "*.safetensors" "*.json" "*.txt" --exclude ".onnx" ".onnx_data" --cache-dir models
-    huggingface-cli download KwaiVGI/LivePortrait --include "*.safetensors" "*.json" "*.txt" --exclude ".onnx" ".onnx_data" --cache-dir models
+    huggingface-cli download stabilityai/sd-turbo --include "*.safetensors" "*.json" "*.txt" --exclude ".onnx" ".onnx_data" --cache-dir models
+    huggingface-cli download warmshao/FasterLivePortrait --local-dir models/FasterLivePortrait--checkpoints
+}
+
+function build_tensorrt_models() {
+    # download_all_models
+
+    printf "\nBuilding TensorRT models...\n"
+
+    BUILD_TRT='python app/live/StreamDiffusionWrapper/build_tensorrt.py'
+    docker run --rm -it -v ./models:/models --gpus all \
+        -e PIPELINE=live-video-to-video -e MODEL_ID=streamdiffusion \
+        livepeer/ai-runner:live-app-streamdiffusion \
+        bash -c "for model in 'stabilityai/sd-turbo' 'KBlueLeaf/kohaku-v2.1'; do
+                    for timesteps in 3 4; do
+                        echo \"Building TensorRT engines for \$model (\$timesteps timesteps)...\" && \
+                        $BUILD_TRT --model-id \$model --timesteps \$timesteps
+                    done
+                done"
+
+    docker run --rm -it -v ./models:/models --gpus all \
+        livepeer/ai-runner:live-app-liveportrait \
+        bash -c "cd /app/app/live/FasterLivePortrait && \
+                    if [ ! -f '/models/FasterLivePortrait--checkpoints/liveportrait_onnx/stitching_lip.trt' ]; then
+                        echo 'Building TensorRT engines for LivePortrait models (regular)...'
+                        sh scripts/all_onnx2trt.sh
+                    else
+                        echo 'Regular LivePortrait TensorRT engines already exist, skipping build'
+                    fi && \
+                    if [ ! -f '/models/FasterLivePortrait--checkpoints/liveportrait_animal_onnx/stitching_lip.trt' ]; then
+                        echo 'Building TensorRT engines for LivePortrait models (animal)...'
+                        sh scripts/all_onnx2trt_animal.sh
+                    else
+                        echo 'Animal LivePortrait TensorRT engines already exist, skipping build'
+                    fi"
 }
 
 # Download models with a restrictive license.
@@ -112,7 +146,11 @@ do
         --restricted)
             MODE="restricted"
             shift
-        ;;  
+        ;;
+        --tensorrt)
+            MODE="tensorrt"
+            shift
+        ;;
         --help)
             display_help
             exit 0
@@ -126,6 +164,7 @@ done
 echo "Starting livepeer AI subnet model downloader..."
 echo "Creating 'models' directory in the current working directory..."
 mkdir -p models
+mkdir -p models/StreamDiffusion--engines models/FasterLivePortrait--checkpoints
 
 # Ensure 'huggingface-cli' is installed.
 echo "Checking if 'huggingface-cli' is installed..."
@@ -138,6 +177,8 @@ if [ "$MODE" = "beta" ]; then
     download_beta_models
 elif [ "$MODE" = "restricted" ]; then
     download_restricted_models
+elif [ "$MODE" = "tensorrt" ]; then
+    build_tensorrt_models
 else
     download_all_models
 fi

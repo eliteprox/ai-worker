@@ -46,7 +46,7 @@ class StreamDiffusionWrapper:
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
         seed: int = 2,
         use_safety_checker: bool = False,
-        engine_dir: Optional[Union[str, Path]] = "engines",
+        engine_dir: Optional[Union[str, Path]] = "/models/StreamDiffusion--engines",
     ):
         """
         Initializes the StreamDiffusionWrapper.
