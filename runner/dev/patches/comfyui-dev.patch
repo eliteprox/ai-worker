@@ -1,5 +1,5 @@
 diff --git a/runner/.devcontainer/devcontainer.json b/runner/.devcontainer/devcontainer.json
-index 902d66c..436022b 100644
+index 902d66c..451ed2a 100644
 --- a/runner/.devcontainer/devcontainer.json
 +++ b/runner/.devcontainer/devcontainer.json
 @@ -4,9 +4,10 @@
@@ -16,7 +16,7 @@ index 902d66c..436022b 100644
  	},
  	"runArgs": [
  		"--gpus=all"
-@@ -22,13 +23,17 @@
+@@ -22,13 +23,16 @@
  			]
  		}
  	},
@@ -31,8 +31,7 @@ index 902d66c..436022b 100644
  	// Use 'mounts' to make a list of local folders available inside the container.
  	"mounts": [
 -		// "source=${localWorkspaceFolder}/models,target=/models,type=bind"
-+		// "source=${localEnv:HOME}/.lpData/models/comfyui,target=/comfyui,type=bind",
-+		// "source=${localEnv:HOME}/.lpData/models/comfyui,target=/workspaces/ai-worker/runner/comfyui,type=bind",
++		"source=${localEnv:HOME}/.lpData/models,target=/comfyui/models,type=bind",
  		"source=${localEnv:HOME}/.lpData/models,target=/models,type=bind"
  	]
  }
