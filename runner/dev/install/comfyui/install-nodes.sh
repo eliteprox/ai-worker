@@ -2,7 +2,7 @@
 
 # Set default base paths
 COMFYUI_BASE_PATH=${1:-/comfyui}
-COMFYSTREAM_BASE_PATH=${2:-/workspaces/ai-worker/runner/comfystream}
+COMFYSTREAM_BASE_PATH=${2:-/comfystream}
 
 # Copy ComfyStream custom nodes to ComfyUI
 cp -r $COMFYSTREAM_BASE_PATH/nodes/tensor_utils $COMFYUI_BASE_PATH/custom_nodes

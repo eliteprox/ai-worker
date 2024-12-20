@@ -1,0 +1,46 @@
+diff --git a/runner/.devcontainer/devcontainer.json b/runner/.devcontainer/devcontainer.json
+index 902d66c..436022b 100644
+--- a/runner/.devcontainer/devcontainer.json
++++ b/runner/.devcontainer/devcontainer.json
+@@ -4,9 +4,10 @@
+ 	"name": "ai-runner",
+ 	// Image to use for the dev container. More info: https://containers.dev/guide/dockerfile.
+ 	"build": {
+-		"dockerfile": "../Dockerfile",
+-		// "dockerfile": "../docker/Dockerfile.text_to_speech",
+-		"context": ".."
++		"dockerfile": "../Dockerfile.live-app__PIPELINE__",
++		"args": {
++			"PIPELINE": "comfyui"
++		}
+ 	},
+ 	"runArgs": [
+ 		"--gpus=all"
+@@ -22,13 +23,17 @@
+ 			]
+ 		}
+ 	},
++	"appPort": ["8000:8000","8188:8188","8888:8888"],
+ 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+ 	"forwardPorts": [
+-		8000
++		8000,
++		8188,
++		8888
+ 	],
+ 	// Use 'mounts' to make a list of local folders available inside the container.
+ 	"mounts": [
+-		// "source=${localWorkspaceFolder}/models,target=/models,type=bind"
++		// "source=${localEnv:HOME}/.lpData/models/comfyui,target=/comfyui,type=bind",
++		// "source=${localEnv:HOME}/.lpData/models/comfyui,target=/workspaces/ai-worker/runner/comfyui,type=bind",
+ 		"source=${localEnv:HOME}/.lpData/models,target=/models,type=bind"
+ 	]
+ }
+diff --git a/runner/Dockerfile.live-app__PIPELINE__ b/runner/Dockerfile.live-app__PIPELINE__
+new file mode 120000
+index 0000000..68cddac
+--- /dev/null
++++ b/runner/Dockerfile.live-app__PIPELINE__
+@@ -0,0 +1 @@
++docker/Dockerfile.live-app__PIPELINE__
+\ No newline at end of file
