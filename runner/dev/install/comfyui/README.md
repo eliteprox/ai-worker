@@ -41,7 +41,6 @@ python main.py --listen
 1. From the **host** system, navigate to the parent directory of the `models` folder mount
 2. Run the following command:
 ```
-cd /models
 curl -s https://raw.githubusercontent.com/livepeer/ai-worker/main/runner/dl_checkpoints.sh | bash -s -- --tensorrt
 ```
 
