@@ -37,6 +37,14 @@ cd /comfyui
 python main.py --listen
 ```
 
+### Download models and build tensorrt
+1. From the **host** system, navigate to the parent directory of the `models` folder mount
+2. Run the following command:
+```
+cd /models
+curl -s https://raw.githubusercontent.com/livepeer/ai-worker/main/runner/dl_checkpoints.sh | bash -s -- --tensorrt
+```
+
 ### Run ComfyStream Dev
 deactivate the comfyui environment, to return to base env and then run comfystream:
 ```
@@ -45,12 +53,6 @@ cd /comfystream
 python server/app.py --workspace /comfyui --media-ports=5678 --host=0.0.0.0
 ```
 
-### Download models and build tensorrt
-1. From the **host** system, navigate to the parent directory of the `models` folder mount
-2. Run the following command:
-```
-curl -s https://raw.githubusercontent.com/livepeer/ai-worker/main/runner/dl_checkpoints.sh | bash -s -- --tensorrt
-```
 
 ### Troubleshooting
 Check the `runner/.devcontainer/devcontainer.json` file to ensure the `appPort` and `mounts` are correct for your host environment
