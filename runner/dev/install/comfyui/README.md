@@ -7,7 +7,7 @@ cd .. && git apply ./runner/dev/patches/comfyui-dev.patch
 ```
 2. Create directory for conda environment:
 ```
-`mkdir $HOME/miniconda3`
+mkdir $HOME/miniconda3
 ```
 3. Verify host path to `models` folder is correct in .devcontainer/devcontainer.json
 4. Re-open Folder as Dev Container in VS Code
@@ -19,6 +19,8 @@ cd .. && git apply ./runner/dev/patches/comfyui-dev.patch
 This will open the `runner` folder inside the Dev Container, allowing you to develop within the containerized environment.
 
 ### Install Conda Environment
+Note: Make sure to run `deactivate` first to get out of the pyenv from ai:runner base before activating any conda environments
+
 Within the running container:
 ```
 cd dev/install/comfui
@@ -30,55 +32,33 @@ This script will install miniconda to the mapped host volume `$HOME/miniconda3:/
 This will download ComfyUI to /comfyui, preserving the existing models and custom_nodes folders, integrating your custom_nodes. 
 Creates a new python environment `comfyui` to separate from existing comfystream installation.
 
-- If needed, configure environment
 ```
-deactivate
 conda activate comfyui
-```
-
-- Install ComfyUI
-```
 cd dev/install/comfui
 ./install-comfyui.sh
 ```
 
-
-### Install all custom nodes from the ai-runner into your development instance of ComfyUI
-Installs custom nodes into the comfyui instance
-
-- If needed, configure environment
-```
-deactivate
-conda activate comfyui
-```
-
-- Install nodes into ComfyUI
+### Install nodes into ComfyUI
 ```
 ./install-nodes.sh
 ```
 
 ### Install nodes into ComfyStream
-
-- If needed, configure environment
+Configure environment:
 ```
-deactivate
 conda activate comfystream
 ```
 
-Install custom nodes into ComfyStream
+Install custom nodes into ComfyStream:
 ```
 cd /comfystream  && python install.py --workspace ../comfyui
 ```
 
-### Run ComfyUI Dev
-- If needed, configure environment
+### Run ComfyUI
+Start a new terminal in the devcontainer, and run:
 ```
 deactivate
 conda activate comfyui
-```
-
-Run ComfyUI
-```
 cd /comfyui && python main.py --listen
 ```
 
@@ -89,8 +69,8 @@ cd /comfyui && python main.py --listen
 curl -s https://raw.githubusercontent.com/livepeer/ai-worker/main/runner/dl_checkpoints.sh | bash -s -- --tensorrt
 ```
 
-### Run ComfyStream Dev
-deactivate the comfyui environment, to return to base env and then run comfystream:
+### Run ComfyStream
+Start a new terminal in the devcontainer, and run:
 ```
 deactivate
 conda activate comfystream
