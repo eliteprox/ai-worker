@@ -1,5 +1,5 @@
 diff --git a/runner/.devcontainer/devcontainer.json b/runner/.devcontainer/devcontainer.json
-index 902d66c..6ce78ef 100644
+index 902d66c..8078557 100644
 --- a/runner/.devcontainer/devcontainer.json
 +++ b/runner/.devcontainer/devcontainer.json
 @@ -4,9 +4,10 @@
@@ -16,7 +16,7 @@ index 902d66c..6ce78ef 100644
  	},
  	"runArgs": [
  		"--gpus=all"
-@@ -22,13 +23,15 @@
+@@ -22,13 +23,16 @@
  			]
  		}
  	},
@@ -31,7 +31,9 @@ index 902d66c..6ce78ef 100644
  	// Use 'mounts' to make a list of local folders available inside the container.
  	"mounts": [
 -		// "source=${localWorkspaceFolder}/models,target=/models,type=bind"
- 		"source=${localEnv:HOME}/.lpData/models,target=/models,type=bind"
+-		"source=${localEnv:HOME}/.lpData/models,target=/models,type=bind"
++		"source=${localEnv:HOME}/.lpData/models,target=/models,type=bind",
++		"source=${localEnv:HOME},target=/root,type=bind"
  	]
  }
 diff --git a/runner/Dockerfile.live-app__PIPELINE__ b/runner/Dockerfile.live-app__PIPELINE__
@@ -42,39 +44,3 @@ index 0000000..68cddac
 @@ -0,0 +1 @@
 +docker/Dockerfile.live-app__PIPELINE__
 \ No newline at end of file
-diff --git a/runner/dev/patches/comfyui-dev.patch b/runner/dev/patches/comfyui-dev.patch
-index 54dbfa3..3dc21fb 100644
---- a/runner/dev/patches/comfyui-dev.patch
-+++ b/runner/dev/patches/comfyui-dev.patch
-@@ -1,5 +1,5 @@
- diff --git a/runner/.devcontainer/devcontainer.json b/runner/.devcontainer/devcontainer.json
--index 902d66c..451ed2a 100644
-+index 902d66c..6ce78ef 100644
- --- a/runner/.devcontainer/devcontainer.json
- +++ b/runner/.devcontainer/devcontainer.json
- @@ -4,9 +4,10 @@
-@@ -16,7 +16,7 @@ index 902d66c..451ed2a 100644
-  	},
-  	"runArgs": [
-  		"--gpus=all"
--@@ -22,13 +23,16 @@
-+@@ -22,13 +23,15 @@
-  			]
-  		}
-  	},
-@@ -31,15 +31,6 @@ index 902d66c..451ed2a 100644
-  	// Use 'mounts' to make a list of local folders available inside the container.
-  	"mounts": [
- -		// "source=${localWorkspaceFolder}/models,target=/models,type=bind"
--+		"source=${localEnv:HOME}/.lpData/models,target=/comfyui/models,type=bind",
-  		"source=${localEnv:HOME}/.lpData/models,target=/models,type=bind"
-  	]
-  }
--diff --git a/runner/Dockerfile.live-app__PIPELINE__ b/runner/Dockerfile.live-app__PIPELINE__
--new file mode 120000
--index 0000000..68cddac
----- /dev/null
--+++ b/runner/Dockerfile.live-app__PIPELINE__
--@@ -0,0 +1 @@
--+docker/Dockerfile.live-app__PIPELINE__
--\ No newline at end of file
