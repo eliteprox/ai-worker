@@ -23,12 +23,27 @@ Within the container, run:
 ./install-comfyui.sh
 ``
 
+Note: Fix loras
+```
+rm -rf /comfyui/models/loras
+rm -rf /comfyui/models/checkpoints
+ln -sf /models/ComfyUI--models/loras /comfyui/models/loras
+ln -sf /models/ComfyUI--models/loras /comfyui/models/checkpoints
+```
+
 ### Install all custom nodes from the ai-runner into your development instance of ComfyUI
 Installs custom nodes into the comfyui instance
 ```
 source /root/.pyenv/versions/comfyui/bin/activate
 ./install-nodes.sh
 ``
+
+Install nodes into ComfyStream
+```
+source deactivate
+cd /comfystream 
+python install.py --workspace ../comfyui
+```
 
 ### Run ComfyUI Dev
 ```
