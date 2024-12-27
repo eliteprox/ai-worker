@@ -19,10 +19,9 @@ mkdir $HOME/miniconda3
 This will open the `runner` folder inside the Dev Container, allowing you to develop within the containerized environment.
 
 ### Install Conda Environment
-Note: Make sure to run `deactivate` first to get out of the pyenv from ai:runner base before activating any conda environments
-
 Within the running container:
 ```
+deactivate
 cd dev/install/comfui
 ./install-conda.sh
 ```
@@ -40,7 +39,7 @@ cd dev/install/comfui
 
 ### Install nodes into ComfyUI
 ```
-./install-nodes.sh
+./install-comfyui-nodes.sh
 ```
 
 ### Install nodes into ComfyStream
