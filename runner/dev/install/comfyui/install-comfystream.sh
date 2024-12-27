@@ -1,6 +1,10 @@
 #!/bin/bash 
 
-#TODO: Check to ensure user is in the correct environment (comfystream)
+#Check to ensure user is in the correct environment
+if grep -q "/root/.pyenv/version" <<< "$(which python)" || ! which python | grep -q "comfystream"; then
+    echo "Warning: You are using Python from /root/.pyenv. Please ensure you have activated the correct environment with 'deactivate' and 'conda activate comfystream' before running this script."
+    exit 1
+fi
 
 cd /comfystream
 /root/miniconda3/envs/comfystream/bin/pip install -r requirements.txt 

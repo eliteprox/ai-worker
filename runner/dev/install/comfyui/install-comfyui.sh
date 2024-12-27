@@ -1,6 +1,10 @@
 #!/bin/bash 
 
-#TODO: Check to ensure user is in the correct environment (comfyui)
+#Check to ensure user is in the correct environment
+if grep -q "/root/.pyenv/version" <<< "$(which python)" || ! which python | grep -q "comfyui"; then
+    echo "Warning: You are using an incorrect Python environment. Please ensure you have activated the correct environment with 'deactivate' and 'conda activate comfyui' before running this script."
+    exit 1
+fi
 
 cd /comfyui
 git init
