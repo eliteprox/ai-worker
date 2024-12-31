@@ -1,5 +1,5 @@
 diff --git a/runner/.devcontainer/devcontainer.json b/runner/.devcontainer/devcontainer.json
-index 902d66c..94ec3e2 100644
+index 902d66c..3d6fe28 100644
 --- a/runner/.devcontainer/devcontainer.json
 +++ b/runner/.devcontainer/devcontainer.json
 @@ -4,9 +4,10 @@
@@ -9,7 +9,7 @@ index 902d66c..94ec3e2 100644
 -		"dockerfile": "../Dockerfile",
 -		// "dockerfile": "../docker/Dockerfile.text_to_speech",
 -		"context": ".."
-+		"dockerfile": "../Dockerfile.live-app__PIPELINE__",
++		"dockerfile": "Dockerfile.comfyui-dev",
 +		"args": {
 +			"PIPELINE": "comfyui"
 +		}
@@ -36,11 +36,3 @@ index 902d66c..94ec3e2 100644
 +		"source=${localEnv:HOME}/miniconda,target=/root/miniconda3,type=bind"
  	]
  }
-diff --git a/runner/Dockerfile.live-app__PIPELINE__ b/runner/Dockerfile.live-app__PIPELINE__
-new file mode 120000
-index 0000000..e27996f
---- /dev/null
-+++ b/runner/Dockerfile.live-app__PIPELINE__
-@@ -0,0 +1 @@
-+docker/Dockerfile.live-base-comfyui
-\ No newline at end of file

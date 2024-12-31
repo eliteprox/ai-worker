@@ -20,6 +20,7 @@ RUN pip install --no-cache-dir --upgrade pip==${PIP_VERSION} setuptools==69.5.1 
 COPY install-comfyui-nodes.sh /install-comfyui-nodes.sh
 RUN chmod +x /install-comfyui-nodes.sh
 RUN /install-comfyui-nodes.sh
+RUN cd /comfyui/custom_nodes && pip install git+https://github.com/yondonfu/comfystream.git && cd comfystream && pip install -r requirements.txt
 
 # Upgrade TensorRT to 10.6.0
 RUN pip uninstall -y tensorrt && \

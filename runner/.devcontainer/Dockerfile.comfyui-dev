@@ -1,0 +1,9 @@
+FROM livepeer/ai-runner:live-app-comfyui
+
+RUN rm -rf /comfyui/custom_nodes
+
+# Set up ComfyUI workspace
+ENV COMFY_UI_WORKSPACE="/comfyui"
+RUN ln -sf /models/ComfyUI--models /comfyui/models
+RUN ln -sf /models/ComfyUI--nodes /comfyui/custom_nodes
+

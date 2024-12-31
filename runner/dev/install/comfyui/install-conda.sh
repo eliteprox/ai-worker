@@ -8,4 +8,3 @@ chmod +x Miniconda3-latest-Linux-x86_64.sh
 /root/miniconda3/bin/conda create -n comfyui python=3.11 -y
 eval "$(/root/miniconda3/bin/conda shell.bash hook)"
 export PATH="/root/miniconda3/bin:${PATH}"
-conda init bash
