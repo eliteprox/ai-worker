@@ -9,6 +9,13 @@ cd /workspaces/ai-worker && git apply ./runner/dev/patches/comfyui-dev.patch
 ```
 mkdir $HOME/miniconda
 ```
+
+You will also need these directories
+```
+mkdir /models/ComfyUI-nodes
+mkdir /models/ComfyUI-models
+```
+
 3. Verify host path to `models` folder is correct in `.devcontainer/devcontainer.json`
 4. Re-open the `runner` folder in VS Code as a devcontainer:
     - Use the `File` menu to select `Open Folder...` and navigate to the `runner` folder.
@@ -38,6 +45,14 @@ cd dev/install/comfyui && ./install-comfyui.sh
 /workspaces/ai-worker/runner/install-comfyui-nodes.sh
 ```
 
+### Run ComfyUI
+Start a new terminal in the devcontainer, and run:
+```
+deactivate
+conda activate comfyui
+cd /comfyui && python main.py --listen
+```
+
 ### Install nodes into ComfyStream
 Configure environment:
 ```
@@ -62,13 +77,6 @@ curl -s https://raw.githubusercontent.com/livepeer/ai-worker/main/runner/dl_chec
 ```
 
 ## Running ComfyUI and ComfyStream
-### Run ComfyUI
-Start a new terminal in the devcontainer, and run:
-```
-deactivate
-conda activate comfyui
-cd /comfyui && python main.py --listen
-```
 
 ### Run ComfyStream
 Start a new terminal in the devcontainer, and run:

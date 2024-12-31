@@ -6,12 +6,17 @@ if grep -q "/root/.pyenv/version" <<< "$(which python)" || ! which python | grep
     exit 1
 fi
 
-cd /comfyui
-git init
-git branch -m main
-git remote add origin https://github.com/comfyanonymous/ComfyUI.git
-git fetch origin
-git sparse-checkout set "/*" "!models" "!inputs"
-git checkout -b master origin/master -f
+cd /
+rm /comfyui/models /comfyui/custom_nodes
+rm -rf /comfyui
+git clone https://github.com/comfyanonymous/ComfyUI.git comfyui
+cd comfyui
+rm -rf models custom_nodes
+ln -sf /models/ComfyUI--models models
+ln -sf /models/ComfyUI--nodes custom_nodes
+pip install --upgrade pip==23.3.2 setuptools==69.5.1 wheel==0.43.0
+pip install -r requirements.txt
+pip install huggingface-hub==0.25.0
 
-/root/miniconda3/envs/comfyui/bin/pip install -r requirements.txt && /root/miniconda3/envs/comfyui/bin/pip install torch torchvision torchaudio
+chown -R $USER:$USER /comfyui/models
+chown -R $USER:$USER /comfyui/custom_nodes

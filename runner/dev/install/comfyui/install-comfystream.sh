@@ -9,4 +9,5 @@ fi
 cd /comfystream
 /root/miniconda3/envs/comfystream/bin/pip install -r requirements.txt 
 /root/miniconda3/envs/comfystream/bin/pip install .
+/root/miniconda3/envs/comfystream/bin/pip install huggingface-hub==0.25.0
 /root/miniconda3/envs/comfystream/bin/python install.py --workspace /comfyui
