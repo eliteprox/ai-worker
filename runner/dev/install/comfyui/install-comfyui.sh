@@ -7,10 +7,10 @@ if grep -q "/root/.pyenv/version" <<< "$(which python)" || ! which python | grep
 fi
 
 cd /
+# remove links to models and custom_nodes before clone
 rm /comfyui/models /comfyui/custom_nodes
-rm -rf /comfyui
-git clone https://github.com/comfyanonymous/ComfyUI.git comfyui
-cd comfyui
+git clone https://github.com/comfyanonymous/ComfyUI.git /comfyui
+cd /comfyui
 rm -rf models custom_nodes
 ln -sf /models/ComfyUI--models models
 ln -sf /models/ComfyUI--nodes custom_nodes
