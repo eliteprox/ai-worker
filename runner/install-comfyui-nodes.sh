@@ -31,14 +31,14 @@ cp -r nodes/tensor_utils /comfyui/custom_nodes/
 # Install ComfyUI-SAM2-Realtime
 cd /comfyui/custom_nodes
 git clone https://github.com/pschroedl/ComfyUI-SAM2-Realtime.git
-cd ComfyUI-SAM2-Realtime
+cd ComfyUI-SAM2-Realtime && git fetch
 git checkout 4f587443fb2808c4b5b303afcd7ec3ec3e0fbd08
 pip install -r requirements.txt
 
 # Install ComfyUI-Florence2-Vision
 cd /comfyui/custom_nodes
 git clone https://github.com/ad-astra-video/ComfyUI-Florence2-Vision.git
-cd ComfyUI-Florence2-Vision
+cd ComfyUI-Florence2-Vision && git fetch
 git checkout 0c624e61b6606801751bd41d93a09abe9844bea7
 pip install -r requirements.txt
 
@@ -46,15 +46,15 @@ pip install -r requirements.txt
 
 cd /comfyui/custom_nodes
 git clone https://github.com/pschroedl/ComfyUI-StreamDiffusion.git
-cd ComfyUI-StreamDiffusion
-git checkout 47256ae66833412440b093a0ba77097c040abbdb
+cd ComfyUI-StreamDiffusion && git fetch
+git checkout 5576e39bca113362f8c9e00cdc3ceb92f38d2395
 pip install -r requirements.txt
 
 # Install ComfyUI-LivePortraitKJ Node
 pip install diffusers==0.30.1
 cd /comfyui/custom_nodes
 git clone https://github.com/kijai/ComfyUI-LivePortraitKJ.git
-cd ComfyUI-LivePortraitKJ
+cd ComfyUI-LivePortraitKJ && git fetch
 git checkout 4d9dc6205b793ffd0fb319816136d9b8c0dbfdff
 pip install -r requirements.txt
 
