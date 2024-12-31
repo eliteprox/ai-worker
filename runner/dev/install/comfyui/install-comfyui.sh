@@ -11,6 +11,7 @@ cd /
 rm /comfyui/models /comfyui/custom_nodes
 git clone https://github.com/comfyanonymous/ComfyUI.git /comfyui
 cd /comfyui
+git checkout v0.3.10
 rm -rf models custom_nodes
 ln -sf /models/ComfyUI--models models
 ln -sf /models/ComfyUI--nodes custom_nodes
