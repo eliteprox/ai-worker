@@ -47,7 +47,7 @@ pip install -r requirements.txt
 cd /comfyui/custom_nodes
 git clone https://github.com/pschroedl/ComfyUI-StreamDiffusion.git
 cd ComfyUI-StreamDiffusion
-git checkout f93b98aa9f20ab46c23d149ad208d497cd496579
+git checkout 47256ae66833412440b093a0ba77097c040abbdb
 pip install -r requirements.txt
 
 # Install ComfyUI-LivePortraitKJ Node
