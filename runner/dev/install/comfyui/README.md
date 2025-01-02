@@ -5,15 +5,11 @@ When developing locally, you can use the existing `livepeer/live-app-comfyui` im
 ```
 cd /workspaces/ai-worker && git apply ./runner/dev/patches/comfyui-dev.patch
 ```
-2. Create directory for conda environment:
+2. Create directory for conda environment, nodes and models:
 ```
 mkdir $HOME/miniconda
-```
-
-You will also need these directories
-```
-mkdir /models/ComfyUI-nodes
-mkdir /models/ComfyUI-models
+mkdir /models/ComfyUI--nodes
+mkdir /models/ComfyUI--models
 ```
 
 3. Verify host path to `models` folder is correct in `.devcontainer/devcontainer.json`
@@ -55,24 +51,40 @@ conda activate comfyui
 cd /comfyui && python main.py --listen
 ```
 
-### Install nodes into ComfyStream
+## Install ComfyStream
 Configure environment:
 ```
 conda activate comfystream
 ```
 
-### Install custom nodes into ComfyStream:
+### Install ComfyStream:
 ```
 cd /comfystream  && python install.py --workspace ../comfyui
+```
+
+### Install nodes into ComfyStream
+```
+/root/miniconda3/envs/comfystream/bin/python install.py --workspace /comfyui
 ```
 
 ### Download models and build tensorrt
 1. From the **host** system, navigate to the parent directory of the `models` folder mount:
 ```
 cd ~/.lpData
-pyenv local 3.11
+````
+
+- If you are on Ubuntu 24.04, you will need to create a python venv:
+```
+mkdir $HOME/venv-hf
+python3 -m venv $HOME/venv-hf
+source $HOME/venv-hf/activate
+```
+
+2. Install huggingface_hub to download models
+```
 pip install -U "huggingface_hub[cli,hf_transfer]"
 ```
+
 2. Run the following command:
 ```
 curl -s https://raw.githubusercontent.com/livepeer/ai-worker/main/runner/dl_checkpoints.sh | bash -s -- --tensorrt
