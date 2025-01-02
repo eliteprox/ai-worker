@@ -36,8 +36,9 @@ This script will install miniconda to the mapped host volume `$HOME/miniconda3:/
 Create a new conda environment `comfyui` to separate from existing comfystream installation.
 ```
 deactivate
+eval "$(/root/miniconda3/bin/conda shell.bash hook)"
 conda activate comfyui
-cd dev/install/comfyui && ./install-comfyui.sh
+/workspaces/ai-worker/runner/dev/install/comfyui/install-comfyui.sh
 ```
 
 ### Install custom nodes into ComfyUI
@@ -49,6 +50,7 @@ cd dev/install/comfyui && ./install-comfyui.sh
 Start a new terminal in the devcontainer, and run:
 ```
 deactivate
+eval "$(/root/miniconda3/bin/conda shell.bash hook)"
 conda activate comfyui
 cd /comfyui && python main.py --listen
 ```
@@ -82,6 +84,7 @@ curl -s https://raw.githubusercontent.com/livepeer/ai-worker/main/runner/dl_chec
 Start a new terminal in the devcontainer, and run:
 ```
 deactivate
+eval "$(/root/miniconda3/bin/conda shell.bash hook)"
 conda activate comfystream
 cd /comfystream && python server/app.py --workspace /comfyui --media-ports=5678 --host=0.0.0.0
 ```
