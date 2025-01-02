@@ -55,15 +55,13 @@ conda activate comfyui
 cd /comfyui && python main.py --listen
 ```
 
-### Install nodes into ComfyStream
+### Install ComfyStream and nodes into ComfyUI workspace
 Configure environment:
 ```
+deactivate
+eval "$(/root/miniconda3/bin/conda shell.bash hook)"
 conda activate comfystream
-```
-
-### Install custom nodes into ComfyStream:
-```
-cd /comfystream  && python install.py --workspace ../comfyui
+/workspaces/ai-worker/runner/dev/install/comfyui/install-comfystream.sh
 ```
 
 ### Download models and build tensorrt
