@@ -49,6 +49,7 @@
             // "source=${localWorkspaceFolder}/models,target=/models,type=bind"
             // "source=${localEnv:HOME}/.lpData/models,target=/models,type=bind"
             "source=${localEnv:HOME}/models/ComfyUI--models/,target=/workspace/ComfyUI/models,type=bind",
-            "source=${localEnv:HOME}/models/ComfyUI--output/,target=/workspace/ComfyUI/output,type=bind"
+            "source=${localEnv:HOME}/models/ComfyUI--output/,target=/workspace/ComfyUI/output,type=bind",
+            "source=${localEnv:HOME}/repos/comfystream/,target=/workspace/comfystream,type=bind"
         ]
 }

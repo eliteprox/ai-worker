@@ -7,6 +7,9 @@ def load_pipeline(name: str) -> Pipeline:
     if name == "comfyui":
         from .comfyui import ComfyUI
         return ComfyUI()
+    elif name == "comfystream":
+        from .comfystream import ComfyStream
+        return ComfyStream()
     elif name == "noop":
         from .noop import Noop
         return Noop()

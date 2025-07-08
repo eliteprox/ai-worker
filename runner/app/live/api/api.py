@@ -130,6 +130,15 @@ async def handle_start_stream(request: web.Request):
             width = height = 512
             params.params = params.params | {"width": width, "height": height}
             logging.warning("Using default dimensions for ComfyUI pipeline")
+        elif process.pipeline == "comfystream":
+            # ComfyStream pipeline needs the comfystream_url parameter
+            if "comfystream_url" not in params.params:
+                params.params["comfystream_url"] = "http://localhost:8889"
+
+            # TODO: Remove this once ComfyUI pipeline supports different resolutions without a restart
+            # width = height = 512
+            params.params = params.params | {"width": width, "height": height}
+            logging.info(f"Using dimensions {width}x{height} for ComfyStream pipeline with URL: {params.params['comfystream_url']}")
         else:
             logging.info(f"Using dimensions from params: {width}x{height}")
 

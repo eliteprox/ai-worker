@@ -32,7 +32,7 @@ class Pipeline(ABC):
         """Get a processed frame from the pipeline.
 
         Returns:
-            Processed VideoFrame
+            VideoOutput: The processed frame
         """
         pass
 
